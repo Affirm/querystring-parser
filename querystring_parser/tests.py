@@ -37,7 +37,7 @@ class KnownValues(unittest.TestCase):
                       ),
                       (
                        # "f=a hair&sectionnew[]=sekcja siatkarska&sectionnew[]=sekcja siatkarska1&sectionnew[]=sekcja siatkarska2",
-                       {u"f": u"a hair", u"sectionnew": {u"": [u"sekcja siatkarska", u"sekcja siatkarska1", u"sekcja siatkarska2"]}}
+                       {u"f": u"a hair", u"sectionnew": [u"sekcja siatkarska", u"sekcja siatkarska1", u"sekcja siatkarska2"]}
                        ),
                        # f = a
                        ({u"f": u"a"}),
@@ -65,7 +65,7 @@ class KnownValues(unittest.TestCase):
                       ),
                       (
                        # "f=a+hair&sectionnew%5B%5D=sekcja+siatkarska&sectionnew%5B%5D=sekcja+siatkarska1&sectionnew%5B%5D=sekcja+siatkarska2",
-                       {u"f": u"a hair", u"sectionnew": {u"": [u"sekcja siatkarska", u"sekcja siatkarska1", u"sekcja siatkarska2"]}}
+                       {u"f": u"a hair", u"sectionnew": [u"sekcja siatkarska", u"sekcja siatkarska1", u"sekcja siatkarska2"]}
                        ),
                        # f = a
                        ({u"f": u"a"}),

@@ -68,34 +68,36 @@ class MalformedQueryStringError(Exception):
     pass
 
 
-def parser_helper(key, val):
+def parser_helper(key, val, convert_numbers):
     '''
     Helper for parser function
     @param key:
     @param val:
     '''
+    if key == '[]':
+        return val
     start_bracket = key.find("[")
     end_bracket = key.find("]")
     pdict = {}
     if has_variable_name(key):  # var['key'][3]
-        pdict[key[:key.find("[")]] = parser_helper(key[start_bracket:], val)
+        pdict[key[:key.find("[")]] = parser_helper(key[start_bracket:], val, convert_numbers)
     elif more_than_one_index(key):  # ['key'][3]
         newkey = get_key(key)
-        newkey = int(newkey) if is_number(newkey) else newkey
-        pdict[newkey] = parser_helper(key[end_bracket + 1:], val)
+        newkey = int(newkey) if convert_numbers and is_number(newkey) else newkey
+        pdict[newkey] = parser_helper(key[end_bracket + 1:], val, convert_numbers)
     else:  # key = val or ['key']
         newkey = key
         if start_bracket != -1:  # ['key']
             newkey = get_key(key)
             if newkey is None:
                 raise MalformedQueryStringError
-        newkey = int(newkey) if is_number(newkey) else newkey
-        val = int(val) if is_number(val) else val
+        newkey = int(newkey) if convert_numbers and is_number(newkey) else newkey
+        val = int(val) if convert_numbers and is_number(val) else val
         pdict[newkey] = val
     return pdict
 
 
-def parse(query_string, unquote=True, encoding='utf-8'):
+def parse(query_string, unquote=True, encoding='utf-8', convert_numbers=True):
     '''
     Main parse function
     @param query_string:
@@ -121,7 +123,7 @@ def parse(query_string, unquote=True, encoding='utf-8'):
         if encoding:
             var = var.decode(encoding)
             val = val.decode(encoding)
-        plist.append(parser_helper(var, val))
+        plist.append(parser_helper(var, val, convert_numbers=convert_numbers))
     for di in plist:
         (k, v) = di.popitem()
         tempdict = mydict
@@ -139,25 +141,7 @@ def parse(query_string, unquote=True, encoding='utf-8'):
 
 if __name__ == '__main__':
     """Compare speed with Django QueryDict"""
-    from timeit import Timer
-    from tests import KnownValues
-    import os
-    import sys
-    from django.core.management import setup_environ
-    # Add project dir so Djnago project settings is in the scope
-    LIB_PATH = os.path.abspath('..')
-    sys.path.append(LIB_PATH)
-    import settings
-    setup_environ(settings)
-
-    i = 0
-    for key, val in KnownValues.knownValues:
-        statement = "parse(\"%s\")" % key
-        statementd = "http.QueryDict(\"%s\")" % key
-        statementqs = "parse_qs(\"%s\")" % key
-        t = Timer(statement, "from __main__ import parse")
-        td = Timer(statementd, "from django import http")
-        tqs = Timer(statementqs, "from urlparse import parse_qs")
-        print "Test string nr ".ljust(15), "querystring-parser".ljust(22), "Django QueryDict".ljust(22), "parse_qs"
-        print str(i).ljust(15), str(min(t.repeat(3, 10000))).ljust(22), str(min(td.repeat(3, 10000))).ljust(22), min(tqs.repeat(3, 10000))
-        i += 1
+    from werkzeug.datastructures import ImmutableMultiDict
+    d = ('config', {'required_shipping': ['email', 'address', 'name']})
+    a = "config%5Brequired_shipping_fields%5D%5B%5D=email&config%5Brequired_shipping_fields%5D%5B%5D=address&config%5Brequired_shipping_fields%5D%5B%5D=name"
+    from werkzeug.urls import url_encode
